@@ -1,0 +1,59 @@
+pipeline {
+    agent {
+        label 'LINUX_RHEL'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Cloning repository...'
+                git url: 'https://github.com/Riyazkhan14/Bits-MTech-SE-DevOps.git', branch: 'feature/Riyaz'
+            }
+        }
+       
+        stage('Build') {
+            steps {
+                echo 'Building project using Maven...'
+                sh "mvn clean install"
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                sh "mvn test"
+            }
+        }
+        stage('Package') {
+            steps {
+                echo 'Packaging the application...'
+                sh "mvn package"
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application...'
+                sh 'ls -la'
+                // Check if JAR file exists
+                echo 'Checking for JAR file in target directory...'
+                sh 'ls -la target/*.jar || echo "JAR file not found!"'
+
+                // Copy JAR file to /var/www/html/
+                echo 'Copying JAR file to /var/www/html/...'
+                sh 'cp target/*.jar /var/www/html/'
+
+                // Verify deployment
+                echo 'Verifying deployment...'
+                sh 'ls -la /var/www/html/'
+                echo 'Deployment complete!'
+            }
+        }
+    }
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs!'
+        }
+    }
+}
