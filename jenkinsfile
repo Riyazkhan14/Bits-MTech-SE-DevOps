@@ -1,0 +1,80 @@
+pipeline {
+    agent {
+        label 'LINUX_RHEL'
+    }
+
+    environment {
+        ARTIFACT_NAME = 'target/*.jar'
+    }
+
+    stages {
+        // stage('Checkout') {
+        //     steps {
+        //         echo 'Cloning repository...'
+        //         git url: 'https://github.com/Riyazkhan14/Bits-MTech-SE-DevOps.git', branch: 'feature/Riyaz'
+        //     }
+        // }
+
+        stage('Build') {
+            steps {
+                echo 'Building project using Maven...'
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                sh 'mvn test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                echo 'Packaging the application...'
+                sh 'mvn package'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // Choose targetDir based on Environment
+                    def targetDir = (params.Environment == 'Production') ? '/var/www/html/production' : '/var/www/html/staging'
+                    def artifact = env.ARTIFACT_NAME
+                    handleDeployment(params.Environment, targetDir, artifact)
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline executed successfully for ${params.Environment} environment!"
+        }
+        failure {
+            echo '❌ Pipeline failed. Please check the logs!'
+        }
+    }
+}
+
+// Function to deploy the code as per Environment Params
+def handleDeployment(environmentName, targetDir, artifact) {
+    echo "Deploying to '${environmentName}' environment → Directory: ${targetDir}"
+
+    sh """
+        echo 'Checking for JAR file...'
+        ls -la ${artifact} || echo '❌ JAR not found!'
+
+        echo 'Creating target directory if not exists...'
+        mkdir -p ${targetDir}
+
+        echo 'Copying JAR file to ${targetDir}...'
+        cp ${artifact} ${targetDir}
+
+        echo 'Verifying deployment...'
+        ls -la ${targetDir}
+    """
+
+    echo "✅ Deployment to ${environmentName} environment complete!"
+}
