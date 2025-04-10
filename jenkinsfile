@@ -10,7 +10,7 @@ pipeline {
     environment {
         ARTIFACT_NAME = 'target/*.jar'
         STAGING_DIR = '/var/www/html/staging'
-        PROD_DIR = '/var/www/html/prod'
+        PROD_DIR = '/var/www/html/production'
     }
 
     stages {
