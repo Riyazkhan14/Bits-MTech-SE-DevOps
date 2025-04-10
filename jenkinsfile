@@ -1,16 +1,14 @@
 pipeline {
     agent {
-        label 'LINUX_RHEL' //RHEL Jenkins Slave node to build
+        label 'LINUX_RHEL'
     }
 
     // parameters {
-    //     choice(name: 'Environment', choices: ['Staging', 'Production'], description: 'Select deployment environment')
+    //     choice(name: 'Environment', choices: ['staging', 'production'], description: 'Select deployment environment')
     // }
 
     environment {
         ARTIFACT_NAME = 'target/*.jar'
-        STAGING_DIR = '/var/www/html/staging'
-        PROD_DIR = '/var/www/html/production'
     }
 
     stages {
@@ -45,7 +43,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    handleDeployment(params.Environment)
+                    // Choose targetDir based on Environment
+                    def targetDir = (params.Environment == 'production') ? '/var/www/html/production' : '/var/www/html/staging'
+                    def artifact = env.ARTIFACT_NAME
+                    handleDeployment(params.Environment, targetDir, artifact)
                 }
             }
         }
@@ -53,33 +54,31 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline executed successfully for ${params.Environment} environment!"
+            echo "✅ Pipeline executed successfully for ${params.Environment} environment!"
         }
         failure {
-            echo 'Pipeline failed. Please check the logs!'
+            echo '❌ Pipeline failed. Please check the logs!'
         }
     }
 }
 
-// === Helper function to handle environment-specific deployment ===
-def handleDeployment(env) {
-    def targetDir = (env == 'production') ? "${env.PROD_DIR}" : "${env.STAGING_DIR}"
-
-    echo "Deploying to '${env}' environment → Directory: ${targetDir}"
+// === Helper function ===
+def handleDeployment(environmentName, targetDir, artifact) {
+    echo "Deploying to '${environmentName}' environment → Directory: ${targetDir}"
 
     sh """
         echo 'Checking for JAR file...'
-        ls -la target/*.jar || echo 'JAR not found!'
+        ls -la ${artifact} || echo '❌ JAR not found!'
 
         echo 'Creating target directory if not exists...'
         mkdir -p ${targetDir}
 
         echo 'Copying JAR file to ${targetDir}...'
-        cp ${env.ARTIFACT_NAME} ${targetDir}
+        cp ${artifact} ${targetDir}
 
         echo 'Verifying deployment...'
         ls -la ${targetDir}
     """
 
-    echo "Deployment to ${env} environment complete!"
+    echo "✅ Deployment to ${environmentName} environment complete!"
 }
