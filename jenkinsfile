@@ -63,7 +63,7 @@ pipeline {
 
 // === Helper function to handle environment-specific deployment ===
 def handleDeployment(env) {
-    def targetDir = (env == 'prod') ? "${env.PROD_DIR}" : "${env.STAGING_DIR}"
+    def targetDir = (env == 'production') ? "${env.PROD_DIR}" : "${env.STAGING_DIR}"
 
     echo "Deploying to '${env}' environment → Directory: ${targetDir}"
 
