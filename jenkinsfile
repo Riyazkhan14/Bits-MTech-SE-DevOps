@@ -3,10 +3,6 @@ pipeline {
         label 'LINUX_RHEL'
     }
 
-    // parameters {
-    //     choice(name: 'Environment', choices: ['staging', 'production'], description: 'Select deployment environment')
-    // }
-
     environment {
         ARTIFACT_NAME = 'target/*.jar'
     }
@@ -44,7 +40,7 @@ pipeline {
             steps {
                 script {
                     // Choose targetDir based on Environment
-                    def targetDir = (params.Environment == 'production') ? '/var/www/html/production' : '/var/www/html/staging'
+                    def targetDir = (params.Environment == 'Production') ? '/var/www/html/production' : '/var/www/html/staging'
                     def artifact = env.ARTIFACT_NAME
                     handleDeployment(params.Environment, targetDir, artifact)
                 }
@@ -62,7 +58,7 @@ pipeline {
     }
 }
 
-// === Helper function ===
+// Function to deploy the code as per Environment Params
 def handleDeployment(environmentName, targetDir, artifact) {
     echo "Deploying to '${environmentName}' environment → Directory: ${targetDir}"
 
